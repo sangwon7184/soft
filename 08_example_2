@@ -1,0 +1,67 @@
+// ===== Pins =====
+#define PIN_LED   9
+#define PIN_TRIG 12
+#define PIN_ECHO 13
+
+// ===== Config =====
+#define SND_VEL        346.0          // m/s (24℃)
+#define INTERVAL       25             // ms
+#define PULSE_DURATION 10             // us
+#define DIST_MIN       100.0          // mm
+#define DIST_MAX       300.0          // mm
+
+#define TIMEOUT  ((unsigned long)((INTERVAL / 2.0) * 1000.0))  
+#define SCALE    (0.001 * 0.5 * SND_VEL)
+
+unsigned long lastSampling;  // ms
+
+float USS_measure(int TRIG, int ECHO) {
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(PULSE_DURATION);
+  digitalWrite(TRIG, LOW);
+
+  unsigned long dur = pulseIn(ECHO, HIGH, TIMEOUT);
+  if (dur == 0) return 0.0;
+  return dur * SCALE; // mm
+}
+
+float distanceToBrightness(float d) {
+  if (d < DIST_MIN || d > DIST_MAX) return 0.0;
+  float F;
+  if (d <= 200.0) {
+    F = (d - 100.0) / 100.0;   // 100→0, 200→1
+  } else {
+    F = (300.0 - d) / 100.0;   // 200→1, 300→0
+  }
+  if (F < 0.0) F = 0.0;
+  if (F > 1.0) F = 1.0;
+  return F;
+}
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+  pinMode(PIN_TRIG, OUTPUT);
+  pinMode(PIN_ECHO, INPUT);
+  digitalWrite(PIN_TRIG, LOW);
+
+  Serial.begin(57600);
+  lastSampling = millis();
+}
+
+void loop() {
+  if (millis() - lastSampling < INTERVAL) return;
+  lastSampling += INTERVAL;
+
+  float dist = USS_measure(PIN_TRIG, PIN_ECHO);
+  float F = distanceToBrightness(dist);
+
+  uint8_t pwm = (uint8_t)round(255.0 * (1.0 - F));
+  analogWrite(PIN_LED, pwm);
+
+  // ===== Serial Plotter 출력 =====
+  // 첫 번째 값은 0(dumy) → 파란선 평평하게
+  // 두 번째 값에 거리(mm) 넣음 → 빨간 곡선 하나만 보임
+  Serial.print(0);
+  Serial.print("\t");
+  Serial.println(dist, 1);
+}
