@@ -1,0 +1,54 @@
+
+#define LED_PIN 9
+
+
+int g_period = 10000; //10ms
+int g_duty = 50;     
+
+
+void set_period(int period) {
+  if (period < 100) period = 100;
+  if (period > 10000) period = 10000;
+  g_period = period;
+}
+
+
+void set_duty(int duty) {
+  if (duty < 0) duty = 0;
+  if (duty > 100) duty = 100;
+  g_duty = duty;
+}
+
+
+void pwm_out(int pin) {
+  int t_on  = (g_period * g_duty) / 100;       
+  int t_off = g_period - t_on;                 
+  
+  if (t_on > 0) {
+    digitalWrite(pin, HIGH);
+    delayMicroseconds(t_on);
+  }
+  if (t_off > 0) {
+    digitalWrite(pin, LOW);
+    delayMicroseconds(t_off);
+  }
+}
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+
+void loop() {
+  // 최소(0%) → 최대(100%)
+  for (int duty = 0; duty <= 100; duty++) {
+    set_duty(duty);
+    for (int i = 0; i < 10; i++) pwm_out(LED_PIN); // 약 10ms 유지
+  }
+
+  // 최대(100%) → 최소(0%)
+  for (int duty = 100; duty >= 0; duty--) {
+    set_duty(duty);
+    for (int i = 0; i < 10; i++) pwm_out(LED_PIN);
+  }
+}
