@@ -1,30 +1,29 @@
   #include <Servo.h>
   
-  // Arduino pin assignment
+  
   #define PIN_LED   9   // LED active-low
   #define PIN_TRIG  12  // sonar sensor TRIGGER
   #define PIN_ECHO  13  // sonar sensor ECHO
   #define PIN_SERVO 10  // servo motor
   
-  // configurable parameters for sonar
-  #define SND_VEL 346.0     // sound velocity at 24 celsius degree (unit: m/sec)
-  #define INTERVAL 25      // sampling interval (unit: msec)
-  #define PULSE_DURATION 10 // ultra-sound Pulse Duration (unit: usec)
-  #define _DIST_MIN 180.0   // minimum distance to be measured (unit: mm)
-  #define _DIST_MAX 360.0   // maximum distance to be measured (unit: mm)
   
-  #define TIMEOUT ((INTERVAL / 2) * 1000.0) // maximum echo waiting time (unit: usec)
-  #define SCALE (0.001 * 0.5 * SND_VEL) // coefficent to convert duration to distance
+  #define SND_VEL 346.0    
+  #define INTERVAL 25     
+  #define PULSE_DURATION 10 
+  #define _DIST_MIN 180.0  
+  #define _DIST_MAX 360.0   
   
-  #define _EMA_ALPHA 0.2    // EMA weight of new sample (range: 0 to 1)
-                            // Setting EMA to 1 effectively disables EMA filter.
+  #define TIMEOUT ((INTERVAL / 2) * 1000.0) 
+  #define SCALE (0.001 * 0.5 * SND_VEL)
+  
+  #define _EMA_ALPHA 0.2   
+                          
   
   // Target Distance
   #define _TARGET_LOW  250.0
   #define _TARGET_HIGH 290.0
   
-  // duty duration for myservo.writeMicroseconds()
-  // NEEDS TUNING (servo by servo)
+
    
   #define _DUTY_MIN 500 // servo full clockwise position (0 degree)
   #define _DUTY_MAX 2700 // servo full counterclockwise position (180 degree)
@@ -56,9 +55,7 @@
   void loop() {
     float  dist_raw, dist_filtered;
     
-    // wait until next sampling time.
-    // millis() returns the number of milliseconds since the program started. 
-    // will overflow after 50 days.
+    
     if (millis() < last_sampling_time + INTERVAL)
       return;
   
@@ -76,12 +73,10 @@
       digitalWrite(PIN_LED, LOW); // LED OFF (범위 안)
     }
   
-    // Modify the below line to implement the EMA equation
+    
     
     dist_ema = _EMA_ALPHA * dist_filtered + (1 - _EMA_ALPHA) * dist_ema; 
-    
-    // adjust servo position according to the USS read value
-    // add your code here!
+  
 
     // 거리 → 각도 매핑
     int angle;
